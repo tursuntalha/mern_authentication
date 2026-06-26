@@ -1,64 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import jwt_decode from 'jwt-decode';
-import setAuthToken from '../utils/setAuthToken';
-import { Redirect } from 'react-router-dom';
-const REACT_APP_SERVER_URL = process.env.REACT_APP_SERVER_URL;
+import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
+import axios from 'axios'
+import { useAuth } from '../context/AuthContext'
 
-const Login = (props) => {
-    let [email, setEmail] = useState('');
-    let [password, setPassword] = useState('');
+const Login = () => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { storeUser, API_URL } = useAuth()
 
-    let handleEmail = (e) => {
-        setEmail(e.target.value);
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const res = await axios.post(`${API_URL}/api/users/login`, { email, password }, { withCredentials: true })
+      storeUser(res.data.user, res.data.accessToken)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    let handlePassword = (e) => {
-        setPassword(e.target.value);
-    }
-
-    let handleSubmit = (e) => {
-        e.preventDefault();
-
-        const userData = { email, password };
-
-        axios.post(`${REACT_APP_SERVER_URL}/api/users/login`, userData)
-        .then(response => {
-            const { token } = response.data;
-            // Save token to localStorage
-            localStorage.setItem('jwtToken', token);
-            // Set token to auth header
-            setAuthToken(token);
-            // Decode token to get the user data
-            const decoded = jwt_decode(token);
-            // Set current user
-            props.nowCurrentUser(decoded);
-        })
-        .catch(error => console.log(`Login error`, error));
-    }
-
-    if (props.user) return <Redirect to="/profile" user={props.user} />;
-
-    return (
-        <div className="row mt-4">
-            <div className="col-md-7 offset-md-3">
-                <div className="card card-body">
-                    <h2 className="py-2">Login</h2>
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input type="text" name="email" value={email} onChange={handleEmail} className="form-control" required />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input type="password" name="password" value={password} onChange={handlePassword} className="form-control" required />
-                        </div>
-                        <button type="submit" className="btn btn-primary float-right">Submit</button>
-                    </form>
-                </div>
+  return (
+    <div className="row mt-4">
+      <div className="col-md-7 offset-md-3">
+        <div className="card">
+          <h2>Login</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+            </div>
+            <button type="submit" className="btn" disabled={loading}>{loading ? 'Signing in...' : 'Submit'}</button>
+          </form>
+          <div className="mt-2">
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  )
 }
 
-export default Login;   
+export default Login

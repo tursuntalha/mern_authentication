@@ -1,28 +1,39 @@
-require('dotenv').config();
-const express = require('express');
-const app = express();
-const cors = require('cors');
-const port = process.env.PORT || 8000;
-const passport = require('passport');
+require('dotenv').config()
 
-const users = require('./routes/api/users');
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
+const passport = require('passport')
+const connectDB = require('./config/db')
+const { apiLimiter } = require('./middleware/rateLimiter')
 
-// Middleware
-app.use(cors());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+const app = express()
 
-// Passport Middleware
-app.use(passport.initialize());
-// Importing passport file into server
-require('./config/passport')(passport);
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+}))
+app.use(express.json({ limit: '10kb' }))
+app.use(express.urlencoded({ extended: false }))
+app.use(cookieParser())
+app.use(passport.initialize())
+
+require('./config/passport')(passport)
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Smile, you are being watch by the Backend Team' });
-});
+  res.json({ message: 'AuthStack API - Secure Authentication', version: '1.0.0' })
+})
 
-app.use('/api/users', users);
+app.use('/api/users', apiLimiter, require('./routes/api/users'))
 
-app.listen(port, () => {
-  console.log(`Server is running on port: ${port}`);
-});
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+connectDB()
+
+const PORT = process.env.PORT || 8000
+app.listen(PORT, () => {
+  console.log(`AuthStack API running on port ${PORT}`)
+})

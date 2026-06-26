@@ -8,7 +8,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
-![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Complete-green?style=for-the-badge)
 
 An educational deep-dive into secure web authentication. Every security decision in this project comes with a **WHY** — not just "use HTTP-only cookies" but "here's what an attacker does if you don't." Built to understand auth security from first principles, not just copy patterns.
 
@@ -174,8 +174,8 @@ mern_authentication/
 
 ## Roadmap
 
-- [ ] **Phase 1** — Core auth: register, login, logout with bcrypt + JWT
-- [ ] **Phase 2** — HTTP-only cookie refresh tokens + rotation
-- [ ] **Phase 3** — CSRF protection + rate limiting + Redis blacklist
-- [ ] **Phase 4** — Email verification + password reset flow
-- [ ] **Phase 5** — Security audit: pen test with OWASP ZAP, write findings report
+- [x] **Phase 1** — Core auth: register, login, logout with bcrypt + JWT
+- [x] **Phase 2** — HTTP-only cookie refresh tokens + rotation
+- [x] **Phase 3** — CSRF protection + rate limiting + Redis blacklist
+- [x] **Phase 4** — Email verification + password reset flow
+- [x] **Phase 5** — Security audit: pen test with OWASP ZAP, write findings report

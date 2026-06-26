@@ -1,76 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { Switch, Route, Redirect } from 'react-router-dom';
-import jwt_decode from 'jwt-decode';
-import setAuthToken from './utils/setAuthToken';
-import Navbar from './components/Navbar';
-import Signup from './components/Signup';
-import Login from './components/Login';
-import Profile from './components/Profile';
-import Welcome from './components/Welcome';
-import About from './components/About';
-import Footer from './components/Footer';
-import './App.css';
+import React from 'react'
+import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Navbar from './components/Navbar'
+import Signup from './components/Signup'
+import Login from './components/Login'
+import Profile from './components/Profile'
+import ForgotPassword from './components/ForgotPassword'
+import ResetPassword from './components/ResetPassword'
+import VerifyEmail from './components/VerifyEmail'
+import Welcome from './components/Welcome'
+import About from './components/About'
+import Footer from './components/Footer'
+import './App.css'
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const user = localStorage.getItem('jwtToken');
-  return <Route {...rest} render={(props) => {
-      return user ? <Component {...rest} {...props} /> : <Redirect to="/login" />
-    }}
-  />;
+  const { isAuthenticated, loading } = useAuth()
+  return (
+    <Route {...rest} render={(props) =>
+      loading ? <div className="text-center mt-5"><h3>Loading...</h3></div> :
+      isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
+    } />
+  )
 }
 
-function App() {
-  // set state values
-  let [currentUser, setCurrentUser] = useState("");
-  let [isAuthenticated, setIsAuthenticated] = useState(true);
+function AppRoutes() {
+  const { isAuthenticated, loading } = useAuth()
 
-  useEffect(() => {
-    let token;
-    if (!localStorage.getItem('jwtToken')) {
-      setIsAuthenticated(false);
-    } else {
-      token = jwt_decode(localStorage.getItem('jwtToken'));
-      setAuthToken(localStorage.jwtToken);
-      setCurrentUser(token);
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const nowCurrentUser = (userData) => {
-    console.log('nowCurrentUser is working...');
-    setCurrentUser(userData);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    if (localStorage.getItem('jwtToken')) {
-      localStorage.removeItem('jwtToken');
-      setCurrentUser(null);
-      setIsAuthenticated(false);
-    }
-  }
-
-  console.log('Current User', currentUser);
-  console.log('Authenicated', isAuthenticated);
+  if (loading) return <div className="text-center mt-5"><h3>Loading...</h3></div>
 
   return (
     <div>
-      <Navbar handleLogout={handleLogout} isAuth={isAuthenticated} />
-      <div className="container mt-5">
+      <Navbar />
+      <div className="container mt-4">
         <Switch>
-          <Route path="/signup" component={ Signup } />
-          <Route 
-            path="/login" 
-            render={ (props) => <Login {...props} nowCurrentUser={nowCurrentUser} setIsAuthenticated={setIsAuthenticated} user={currentUser}/>} 
-          />
-          <Route path="/about" component={ About } />
-          <PrivateRoute path="/profile" component={ Profile } user={currentUser} />
-          <Route exact path="/" component={ Welcome } />
+          <Route exact path="/" component={Welcome} />
+          <Route path="/signup" render={(props) => !isAuthenticated ? <Signup {...props} /> : <Redirect to="/profile" />} />
+          <Route path="/login" render={(props) => !isAuthenticated ? <Login {...props} /> : <Redirect to="/profile" />} />
+          <Route path="/about" component={About} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/verify-email" component={VerifyEmail} />
+          <PrivateRoute path="/profile" component={Profile} />
         </Switch>
       </div>
       <Footer />
     </div>
-  );
+  )
 }
 
-export default App;
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  )
+}
+
+export default App
